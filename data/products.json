@@ -1,0 +1,90 @@
+[
+  {
+    "id": "PROD001",
+    "name": "Smartwatch Pro X",
+    "category": "Electronics",
+    "price": 249.99,
+    "description": "The latest smartwatch with advanced health tracking, GPS, and waterproof design. Available in Black and Silver.",
+    "features": ["Heart Rate Monitor", "GPS Tracking", "5ATM Water Resistance", "1.8-inch AMOLED Display"],
+    "in_stock": true,
+    "rating": 4.5,
+    "reviews_count": 1247
+  },
+  {
+    "id": "PROD002",
+    "name": "Organic Coffee Beans (500g)",
+    "category": "Groceries",
+    "price": 12.50,
+    "description": "Premium organic arabica coffee beans, ethically sourced and roasted to perfection. Rich and smooth flavor profile.",
+    "features": ["100% Organic", "Medium Roast", "Arabica Beans", "500g Pack"],
+    "in_stock": true,
+    "rating": 4.8,
+    "reviews_count": 892
+  },
+  {
+    "id": "PROD003",
+    "name": "Ergonomic Office Chair",
+    "category": "Furniture",
+    "price": 189.99,
+    "description": "High-back ergonomic office chair designed for maximum comfort and support during long working hours. Adjustable lumbar support.",
+    "features": ["Adjustable Lumbar Support", "Breathable Mesh", "Swivel Base", "Heavy Duty Casters"],
+    "in_stock": false,
+    "rating": 4.3,
+    "reviews_count": 567
+  },
+  {
+    "id": "PROD004",
+    "name": "Bluetooth Noise-Cancelling Headphones",
+    "category": "Electronics",
+    "price": 89.99,
+    "description": "Immersive sound experience with active noise cancellation. Long-lasting battery and comfortable earcups.",
+    "features": ["Active Noise Cancellation", "Bluetooth 5.0", "30-hour Battery Life", "Foldable Design"],
+    "in_stock": true,
+    "rating": 4.6,
+    "reviews_count": 2134
+  },
+  {
+    "id": "PROD005",
+    "name": "Wireless Gaming Mouse",
+    "category": "Electronics",
+    "price": 79.99,
+    "description": "High-precision wireless gaming mouse with RGB lighting and customizable buttons.",
+    "features": ["16000 DPI", "RGB Lighting", "Wireless 2.4GHz", "Ergonomic Design"],
+    "in_stock": true,
+    "rating": 4.4,
+    "reviews_count": 876
+  },
+  {
+    "id": "PROD006",
+    "name": "Premium Yoga Mat",
+    "category": "Sports",
+    "price": 45.99,
+    "description": "Non-slip premium yoga mat made from eco-friendly TPE material. Perfect for all yoga styles.",
+    "features": ["Non-slip Surface", "Eco-friendly TPE", "6mm Thickness", "Carrying Strap"],
+    "in_stock": true,
+    "rating": 4.7,
+    "reviews_count": 643
+  },
+  {
+    "id": "PROD007",
+    "name": "Smart Home Security Camera",
+    "category": "Electronics",
+    "price": 129.99,
+    "description": "1080p HD security camera with night vision, motion detection, and smartphone app integration.",
+    "features": ["1080p HD", "Night Vision", "Motion Detection", "Mobile App"],
+    "in_stock": true,
+    "rating": 4.2,
+    "reviews_count": 1098
+  },
+  {
+    "id": "PROD008",
+    "name": "Ceramic Non-Stick Pan Set",
+    "category": "Kitchen",
+    "price": 99.99,
+    "description": "3-piece ceramic non-stick pan set. Dishwasher safe and PFOA-free coating.",
+    "features": ["Ceramic Coating", "PFOA-Free", "Dishwasher Safe", "3-Piece Set"],
+    "in_stock": false,
+    "rating": 4.5,
+    "reviews_count": 745
+  }
+]
