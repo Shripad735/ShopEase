@@ -98,17 +98,17 @@ except Exception as e:
     st.error(f"Failed to initialize Groq client. Please check your API key: {e}")
     st.stop()
 
-mongo_client = None
-mongo_db = None
-if MongoClient:
-    try:
-        # Replace with your actual MongoDB connection string if running a local instance
-        mongo_client = MongoClient("mongodb://localhost:27017/", serverSelectionTimeoutMS=5000) 
-        mongo_db = mongo_client["ShopEase_Chatbot"] 
-        st.info("")
-    except Exception as e:
-        st.warning(f"Could not connect to dummy MongoDB at `mongodb://localhost:27017/`: {e}. Continuing without it.")
-        mongo_client = None
+# mongo_client = None
+# mongo_db = None
+# if MongoClient:
+#     try:
+#         # Replace with your actual MongoDB connection string if running a local instance
+#         mongo_client = MongoClient("mongodb://localhost:27017/", serverSelectionTimeoutMS=5000) 
+#         mongo_db = mongo_client["ShopEase_Chatbot"] 
+#         st.info("")
+#     except Exception as e:
+#         st.warning(f"Could not connect to dummy MongoDB at `mongodb://localhost:27017/`: {e}. Continuing without it.")
+#         mongo_client = None
 
 
 # Load data functions
