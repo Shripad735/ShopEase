@@ -19,6 +19,14 @@ import pandas as pd
 import time
 import re
 
+# Import pymongo for dummy MongoDB connection (add try-except for robustness)
+try:
+    from pymongo import MongoClient
+except ImportError:
+    MongoClient = None # Set to None if pymongo is not installed
+    st.warning("`pymongo` not found. Install with `pip install pymongo` to enable dummy MongoDB connection features. Continuing without it.")
+
+
 # Import configurations and prompts
 from config import GROQ_API_KEY, GROQ_MODEL_NAME
 from prompts import SYSTEM_PROMPT, PRODUCT_DATA_INSTRUCTION, ORDER_DATA_INSTRUCTION, QUICK_ACTIONS
@@ -89,6 +97,19 @@ try:
 except Exception as e:
     st.error(f"Failed to initialize Groq client. Please check your API key: {e}")
     st.stop()
+
+mongo_client = None
+mongo_db = None
+if MongoClient:
+    try:
+        # Replace with your actual MongoDB connection string if running a local instance
+        mongo_client = MongoClient("mongodb://localhost:27017/", serverSelectionTimeoutMS=5000) 
+        mongo_db = mongo_client["ShopEase_Chatbot"] 
+        st.info("")
+    except Exception as e:
+        st.warning(f"Could not connect to dummy MongoDB at `mongodb://localhost:27017/`: {e}. Continuing without it.")
+        mongo_client = None
+
 
 # Load data functions
 @st.cache_data
@@ -305,9 +326,10 @@ def add_quick_action_buttons_streamlit(response_text, user_lang="en", message_in
         for idx, (button_text, action_text) in enumerate(buttons_to_show):
             col_idx = idx % 3
             with cols[col_idx]:
+                # FIX: Add st.rerun() to quick action buttons to ensure single click functionality
                 if st.button(button_text, key=f"quick_btn_{message_index}_{idx}", use_container_width=True):
                     st.session_state.quick_action_trigger = action_text
-                    st.rerun()
+                    st.rerun() # Trigger a rerun to process the quick action immediately
 
 def create_order_status_card(order_data):
     """Create a formatted order status card instead of timeline"""
@@ -390,8 +412,9 @@ if typed_prompt and not st.session_state.processing:
 if new_user_prompt_content:
     st.session_state.messages.append({"role": "user", "content": new_user_prompt_content})
     st.session_state.processing = True
-    # No st.rerun() here, the chat display below will show the user message,
-    # and then the bot response generation will start.
+    # If the prompt comes from quick action or voice, it's processed here,
+    # and setting `processing` to True will cause the bot response to generate
+    # in the next part of the script execution.
 
 # Main chat area
 col1, col2 = st.columns([3, 1])
@@ -428,31 +451,37 @@ with col1:
 
     # --- Bot Response Generation and Streaming ---
     if st.session_state.processing and st.session_state.messages[-1]["role"] == "user":
-        with st.chat_message("assistant"):
-            message_placeholder = st.empty()
-            message_placeholder.markdown("Typing... ⏳") 
-            full_response = ""
-            
-            # Prepare messages for API
-            api_messages_payload = [{"role": "system", "content": system_prompt_with_data}]
-            # Send recent history including the latest user message
-            history_plus_current = st.session_state.messages[-9:] 
-            for msg_content in history_plus_current:
-                 api_messages_payload.append({"role": msg_content["role"], "content": msg_content["content"]})
+        with st.spinner("Thinking..."): # Add a spinner while processing
+            with st.chat_message("assistant"):
+                message_placeholder = st.empty()
+                message_placeholder.markdown("Typing... ⏳") 
+                full_response = ""
+                
+                # Prepare messages for API
+                api_messages_payload = [{"role": "system", "content": system_prompt_with_data}]
+                # Send recent history including the latest user message
+                # Using [-9:] to ensure system prompt + 8 previous user/assistant messages + current user message
+                history_plus_current = st.session_state.messages[-8:] 
+                for msg_content in history_plus_current:
+                     api_messages_payload.append({"role": msg_content["role"], "content": msg_content["content"]})
+                # Add the current user query explicitly if it's not already in history_plus_current
+                if st.session_state.messages[-1]["role"] == "user" and st.session_state.messages[-1] not in history_plus_current:
+                     api_messages_payload.append({"role": "user", "content": st.session_state.messages[-1]["content"]})
 
-            try:
-                for content_chunk in generate_response_stream(api_messages_payload):
-                    full_response += content_chunk
-                    message_placeholder.markdown(full_response + "▌")
-                message_placeholder.markdown(full_response) # Final response
-            except Exception as e:
-                full_response = f"😔 I apologize, but I encountered an error: {e}."
-                message_placeholder.error(full_response)
-            
-            st.session_state.messages.append({"role": "assistant", "content": full_response})
-            st.session_state.processing = False
-            st.session_state.auto_scroll = True 
-            st.rerun() # Only rerun AFTER bot response is complete
+
+                try:
+                    for content_chunk in generate_response_stream(api_messages_payload):
+                        full_response += content_chunk
+                        message_placeholder.markdown(full_response + "▌")
+                    message_placeholder.markdown(full_response) # Final response
+                except Exception as e:
+                    full_response = f"😔 I apologize, but I encountered an error: {e}."
+                    message_placeholder.error(full_response)
+                
+                st.session_state.messages.append({"role": "assistant", "content": full_response})
+                st.session_state.processing = False
+                st.session_state.auto_scroll = True 
+                st.rerun() # Only rerun AFTER bot response is complete to update UI and process next actions
 
 with col2:
     # Sidebar information
@@ -474,22 +503,22 @@ with col2:
 
     # Quick actions in sidebar - set trigger, don't rerun here
     st.markdown("### 🚀 Quick Actions")
+    # FIX: Add st.rerun() to sidebar quick action buttons to ensure single click functionality
     if st.button("📦 Track Order", disabled=st.session_state.processing, key="qa_track_order"):
-        if not st.session_state.processing:
-            st.session_state.quick_action_trigger = "I want to track my order"
-            # No rerun, main loop will pick it up
+        st.session_state.quick_action_trigger = "I want to track my order"
+        st.rerun() # Trigger a rerun to process the quick action immediately
     
     if st.button("🛍️ Product Info", disabled=st.session_state.processing, key="qa_prod_info"):
-        if not st.session_state.processing:
-            st.session_state.quick_action_trigger = "Show me popular products"
+        st.session_state.quick_action_trigger = "Show me popular products"
+        st.rerun() # Trigger a rerun to process the quick action immediately
 
     if st.button("🔄 Return Item", disabled=st.session_state.processing, key="qa_return_item"):
-        if not st.session_state.processing:
-            st.session_state.quick_action_trigger = "I want to return an item"
+        st.session_state.quick_action_trigger = "I want to return an item"
+        st.rerun() # Trigger a rerun to process the quick action immediately
 
     if st.button("💳 Payment Help", disabled=st.session_state.processing, key="qa_payment_help"):
-        if not st.session_state.processing:
-            st.session_state.quick_action_trigger = "What payment methods do you accept?"
+        st.session_state.quick_action_trigger = "What payment methods do you accept?"
+        st.rerun() # Trigger a rerun to process the quick action immediately
 
 # Auto-scroll to bottom if needed
 if st.session_state.auto_scroll:
@@ -516,10 +545,10 @@ with st.sidebar:
     ]
     
     for query_idx, query_text in enumerate(test_queries): # Use enumerate for unique keys
+        # FIX: Add st.rerun() to test query buttons to ensure single click functionality
         if st.button(query_text, key=f"test_query_{query_idx}", disabled=st.session_state.processing):
-            if not st.session_state.processing:
-                st.session_state.quick_action_trigger = query_text
-                # No rerun here
+            st.session_state.quick_action_trigger = query_text
+            st.rerun() # Trigger a rerun to process the quick action immediately
 
     st.markdown("---")
     st.markdown("### 🔧 Features")
@@ -532,6 +561,8 @@ with st.sidebar:
     ✅ **Interactive UI**
     ✅ **Quick Action Buttons**
     ✅ **Streaming Responses**
+    ✅ **Single-click Quick Actions**
+    ✅ **Dummy MongoDB Connection**
     """)
     
     st.markdown("---")
